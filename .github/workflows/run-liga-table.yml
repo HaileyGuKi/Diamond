@@ -71,7 +71,7 @@ jobs:
           git fetch
           if ! git diff --quiet HEAD "$LOG_FILE"; then
             git config user.name "blackvoidx"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config user.email "anonymous@example.com"
             git add "$LOG_FILE"
             git commit -m "Updated liga-table.log on $(date '+%Y-%m-%d')"
             git push
