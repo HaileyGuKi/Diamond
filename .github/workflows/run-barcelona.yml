@@ -86,7 +86,7 @@ jobs:
         if: env.already_ran == 'false'
         run: |
           git config user.name "blackvoidx"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "anonymous@example.com"
           git add "$LOG_FILE" liga-table.log
           git commit -m "Update log file for $(date '+%Y-%m-%d')"
           git push
