@@ -44,7 +44,7 @@ require('dotenv').config();
         }
 
         // Wait for the table element
-        const tableSelector = '.ssrcss-1dbj4ao-TableWrapper';
+        const tableSelector = '[data-testid="football-table-wrapper"]';
         await page.waitForSelector(tableSelector);
 
         // Take a screenshot of the table element
