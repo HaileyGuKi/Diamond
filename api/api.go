@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 // makeRequest performs an HTTP request and returns the response body.
@@ -80,14 +81,25 @@ func CheckScheduledMatches(apiKey string) {
 		return
 	}
 
-	// Handle the result
 	match := apiResponse.Matches[0]
 	matchTime, err := utils.ParseTime(match.UtcDate)
 	utils.HandleErr("Error parsing match date", err)
 
-	fmt.Printf("[MatchDay %d] - %s vs %s - %s\n",
-		match.Season.CurrentMatchday,
-		match.HomeTeam.Name,
-		match.AwayTeam.Name,
-		matchTime.Format("2006-01-02 15:04"))
+	// Calculate days remaining until the next match using time.Until
+	daysUntilMatch := int(time.Until(matchTime).Hours() / 24)
+
+	// Check if the match is today
+	if daysUntilMatch != 0 {
+		// Print the days remaining until the match
+		fmt.Printf("[Days Until Match: %d] - %s vs %s - %s\n",
+			daysUntilMatch,
+			match.HomeTeam.Name,
+			match.AwayTeam.Name,
+			matchTime.Format("2006-01-02 15:04"))
+	} else {
+		fmt.Printf("[MatchDay] - %s vs %s - %s\n",
+			match.HomeTeam.Name,
+			match.AwayTeam.Name,
+			matchTime.Format("2006-01-02 15:04"))
+	}
 }
