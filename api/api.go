@@ -11,6 +11,29 @@ import (
 	"time"
 )
 
+// Helper function to convert score to emoji string
+func convertScoreToEmoji(score int) string {
+	emojiNumbers := map[rune]string{
+		'0': "0️⃣",
+		'1': "1️⃣",
+		'2': "2️⃣",
+		'3': "3️⃣",
+		'4': "4️⃣",
+		'5': "5️⃣",
+		'6': "6️⃣",
+		'7': "7️⃣",
+		'8': "8️⃣",
+		'9': "9️⃣",
+	}
+
+	scoreStr := fmt.Sprintf("%d", score)
+	emojiStr := ""
+	for _, digit := range scoreStr {
+		emojiStr += emojiNumbers[digit]
+	}
+	return emojiStr
+}
+
 // makeRequest performs an HTTP request and returns the response body.
 func makeRequest(apiKey, status string) ([]byte, error) {
 	client := &http.Client{}
@@ -57,11 +80,14 @@ func CheckFinishedMatches(apiKey string) {
 
 	// Check if the match was yesterday
 	if utils.IsYesterday(matchTime) {
-		fmt.Printf("%s %d - %d %s\n",
-			match.AwayTeam.Name,
-			match.Score.FullTime.Away,
-			match.Score.FullTime.Home,
+		homeScoreEmoji := convertScoreToEmoji(match.Score.FullTime.Home)
+		awayScoreEmoji := convertScoreToEmoji(match.Score.FullTime.Away)
+
+		fmt.Printf("🏁 [FINISHED] %s %s  - %s  %s \n",
 			match.HomeTeam.Name,
+			homeScoreEmoji,
+			awayScoreEmoji,
+			match.AwayTeam.Name,
 		)
 	} else {
 		fmt.Println("No match played yesterday.")
@@ -91,13 +117,13 @@ func CheckScheduledMatches(apiKey string) {
 	// Check if the match is today
 	if daysUntilMatch != 0 {
 		// Print the days remaining until the match
-		fmt.Printf("[Days Until Match: %d] - %s vs %s - %s\n",
+		fmt.Printf("🚩 [Days Until Match: %d] - %s vs %s - 🕞 %s\n",
 			daysUntilMatch,
 			match.HomeTeam.Name,
 			match.AwayTeam.Name,
 			matchTime.Format("2006-01-02 15:04"))
 	} else {
-		fmt.Printf("[MatchDay] - %s vs %s - %s\n",
+		fmt.Printf("🚩 [MatchDay] - %s vs %s - 🕞 %s\n",
 			match.HomeTeam.Name,
 			match.AwayTeam.Name,
 			matchTime.Format("2006-01-02 15:04"))

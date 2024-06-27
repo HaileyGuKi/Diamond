@@ -34,7 +34,7 @@ func convertToIranTime(utcTime time.Time) (time.Time, error) {
 
 // IsYesterday checks if the given date was yesterday.
 func IsYesterday(matchTime time.Time) bool {
-	yesterday := time.Now().AddDate(0, 0, -1)
-	// yesterday := time.Date(2024, 9, 1, 15, 0, 0, 0, time.UTC).AddDate(0, 0, -1)
+	// yesterday := time.Now().AddDate(0, 0, -1)
+	yesterday := time.Date(2024, 9, 1, 15, 0, 0, 0, time.UTC).AddDate(0, 0, -1)
 	return matchTime.Year() == yesterday.Year() && matchTime.YearDay() == yesterday.YearDay()
 }
