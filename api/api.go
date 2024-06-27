@@ -3,6 +3,7 @@ package api
 
 import (
 	"barcelona-watch/models"
+	"barcelona-watch/telegram"
 	"barcelona-watch/utils"
 	"encoding/json"
 	"fmt"
@@ -75,20 +76,23 @@ func CheckFinishedMatches(apiKey string) {
 
 	// Handle the result
 	match := apiResponse.Matches[0]
-	matchTime, err := utils.ParseTime(match.UtcDate)
+	spainTime, _, _, err := utils.ParseTime(match.UtcDate)
 	utils.HandleErr("Error parsing match date", err)
 
 	// Check if the match was yesterday
-	if utils.IsYesterday(matchTime) {
+	if utils.IsYesterday(spainTime) {
 		homeScoreEmoji := convertScoreToEmoji(match.Score.FullTime.Home)
 		awayScoreEmoji := convertScoreToEmoji(match.Score.FullTime.Away)
 
-		fmt.Printf("🏁 [FINISHED] %s %s  - %s  %s \n",
+		message := fmt.Sprintf("🏁 %s %s  - %s  %s \n",
 			match.HomeTeam.Name,
 			homeScoreEmoji,
 			awayScoreEmoji,
 			match.AwayTeam.Name,
 		)
+		fmt.Print(message)
+		telegram.SendToTelegram(message)
+
 	} else {
 		fmt.Println("No match played yesterday.")
 	}
@@ -108,24 +112,28 @@ func CheckScheduledMatches(apiKey string) {
 	}
 
 	match := apiResponse.Matches[0]
-	matchTime, err := utils.ParseTime(match.UtcDate)
+	spainTime, iranTime, jalaliDate, err := utils.ParseTime(match.UtcDate)
 	utils.HandleErr("Error parsing match date", err)
 
+	// Truncate the current time and match time to midnight (start of the day)
+	now := time.Now().Truncate(24 * time.Hour)
+	matchDay := spainTime.Truncate(24 * time.Hour)
+
 	// Calculate days remaining until the next match using time.Until
-	daysUntilMatch := int(time.Until(matchTime).Hours() / 24)
+	daysUntilMatch := int(matchDay.Sub(now).Hours() / 24)
 
 	// Check if the match is today
-	if daysUntilMatch != 0 {
-		// Print the days remaining until the match
-		fmt.Printf("🚩 [Days Until Match: %d] - %s vs %s - 🕞 %s\n",
-			daysUntilMatch,
+	if daysUntilMatch == 0 {
+		// Format the Jalali date and Iran time together
+		iranFormatted := fmt.Sprintf("%s %s", jalaliDate, iranTime.Format("15:04"))
+
+		message := fmt.Sprintf("🚩 [MatchDay]\n%s vs %s\n🇪🇸🕞 %s\n🇮🇷🕞 %s\n",
 			match.HomeTeam.Name,
 			match.AwayTeam.Name,
-			matchTime.Format("2006-01-02 15:04"))
-	} else {
-		fmt.Printf("🚩 [MatchDay] - %s vs %s - 🕞 %s\n",
-			match.HomeTeam.Name,
-			match.AwayTeam.Name,
-			matchTime.Format("2006-01-02 15:04"))
+			spainTime.Format("2006-01-02 15:04"), // Spain time
+			iranFormatted)                        // Jalali date + Iran time
+
+		fmt.Print(message)
+		telegram.SendToTelegram(message)
 	}
 }
