@@ -93,6 +93,11 @@ func CheckFinishedMatches(apiKey string) {
 		fmt.Print(message)
 		telegram.SendToTelegram(message)
 
+		if match.HomeTeam.Name == "FC Barcelona" && (match.Score.FullTime.Home > match.Score.FullTime.Away) || match.AwayTeam.Name == "FC Barcelona" && (match.Score.FullTime.Away > match.Score.FullTime.Home) {
+			message := "🔵🔴 We are Winner 😃"
+			telegram.SendToTelegram(message)
+		}
+
 	} else {
 		fmt.Println("No match played yesterday.")
 	}
