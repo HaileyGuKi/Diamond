@@ -27,7 +27,7 @@ const (
 func SendToTelegram(message string) {
 	botToken := getEnv("TELEGRAM_BOT_TOKEN")
 	channelID := getEnv("TELEGRAM_CHANNEL_ID")
-	proxyURL := "http://0.0.0.0:8086"
+	proxyURL := "socks5://0.0.0.0:8086"
 
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", botToken)
 	telegramMessage := TelegramMessage{

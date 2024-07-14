@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	err := godotenv.Load(".env")
+	err := godotenv.Load("/home/mohammad/Videos/go/Barcelona-watch/.env")
 	utils.HandleErr("Error loading .env file", err)
 }
 
