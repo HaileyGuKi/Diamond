@@ -5,9 +5,11 @@ type Match struct {
 	UtcDate  string `json:"utcDate"`
 	HomeTeam struct {
 		Name string `json:"name"`
+		Logo string `json:"crest"`
 	} `json:"homeTeam"`
 	AwayTeam struct {
 		Name string `json:"name"`
+		Logo string `json:"crest"`
 	} `json:"awayTeam"`
 	Score struct {
 		FullTime struct {

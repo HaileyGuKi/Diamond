@@ -2,6 +2,7 @@
 package api
 
 import (
+	img "barcelona-watch/image"
 	"barcelona-watch/models"
 	"barcelona-watch/telegram"
 	"barcelona-watch/utils"
@@ -91,12 +92,14 @@ func CheckFinishedMatches(apiKey string) {
 			match.AwayTeam.Name,
 		)
 		fmt.Print(message)
-		telegram.SendToTelegram(message)
+		fmt.Println(match.HomeTeam)
+		img.GenerateBannerFromURLs(match.HomeTeam.Logo, match.AwayTeam.Logo)
+		// telegram.SendToTelegram(message)
 
-		if match.HomeTeam.Name == "FC Barcelona" && (match.Score.FullTime.Home > match.Score.FullTime.Away) || match.AwayTeam.Name == "FC Barcelona" && (match.Score.FullTime.Away > match.Score.FullTime.Home) {
-			message := "🔵🔴 We are Winner 😃"
-			telegram.SendToTelegram(message)
-		}
+		// if match.HomeTeam.Name == "FC Barcelona" && (match.Score.FullTime.Home > match.Score.FullTime.Away) || match.AwayTeam.Name == "FC Barcelona" && (match.Score.FullTime.Away > match.Score.FullTime.Home) {
+		// 	message := "🔵🔴 We are Winner 😃"
+		// 	telegram.SendToTelegram(message)
+		// }
 
 	} else {
 		fmt.Println("No match played yesterday.")
