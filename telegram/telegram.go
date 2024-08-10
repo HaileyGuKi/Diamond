@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"net/url"
@@ -16,6 +18,12 @@ import (
 type TelegramMessage struct {
 	ChatID string `json:"chat_id"`
 	Text   string `json:"text"`
+}
+
+type TelegramPhotoMessage struct {
+	ChatID  string `json:"chat_id"`
+	Photo   string `json:"photo"`             // URL or path to the photo
+	Caption string `json:"caption,omitempty"` // Optional caption for the image
 }
 
 const (
@@ -56,6 +64,75 @@ func SendToTelegram(message string) {
 		}
 		break // Exit the loop if request was successful
 	}
+}
+
+func SendPhotoToTelegram(photoPath, caption string) {
+	botToken := getEnv("TELEGRAM_BOT_TOKEN")
+	channelID := getEnv("TELEGRAM_CHANNEL_ID")
+	proxyURL := "socks5://0.0.0.0:8086"
+
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto", botToken)
+
+	// Open the image file to send it
+	file, err := os.Open(photoPath)
+	if err != nil {
+		utils.HandleErr("Error opening photo file", err)
+		return
+	}
+	defer file.Close()
+
+	// Create a buffer to hold the multipart form data
+	form := &bytes.Buffer{}
+	writer := multipart.NewWriter(form)
+
+	// Create the form file field for the photo
+	part, err := writer.CreateFormFile("photo", photoPath)
+	if err != nil {
+		utils.HandleErr("Error creating form file for photo", err)
+		return
+	}
+
+	// Copy the photo file into the form file field
+	_, err = io.Copy(part, file)
+	if err != nil {
+		utils.HandleErr("Error copying photo file", err)
+		return
+	}
+
+	// Add the chat_id and caption fields
+	_ = writer.WriteField("chat_id", channelID)
+	_ = writer.WriteField("caption", caption)
+
+	// Close the writer to finalize the form data
+	err = writer.Close()
+	if err != nil {
+		utils.HandleErr("Error closing form writer", err)
+		return
+	}
+
+	// Create the HTTP client with a proxy if needed
+	client := utils.CreateHTTPClient(proxyURL)
+	req, err := http.NewRequest("POST", apiURL, form)
+	if err != nil {
+		utils.HandleErr("Error creating new request", err)
+		return
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	// Perform the request
+	resp, err := client.Do(req)
+	if err != nil {
+		utils.HandleErr("Error sending request to Telegram", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		utils.HandleErr(fmt.Sprintf("Failed to send photo, status code: %d", resp.StatusCode), err)
+		return
+	}
+
+	fmt.Println("Photo sent successfully")
 }
 
 func sendRequest(client *http.Client, apiURL string, jsonData []byte, retryCount *int) error {

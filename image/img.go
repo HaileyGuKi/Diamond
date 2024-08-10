@@ -116,4 +116,26 @@ func GenerateBannerFromURLs(homeLogoURL, awayLogoURL string) {
 	if err != nil {
 		fmt.Println("Error creating banner:", err)
 	}
+
+	// Delete the home team logo after banner creation
+	err = deleteFile("home_logo.jpg")
+	if err != nil {
+		fmt.Println("Error deleting home logo:", err)
+	}
+
+	// Delete the away team logo after banner creation
+	err = deleteFile("away_logo.jpg")
+	if err != nil {
+		fmt.Println("Error deleting away logo:", err)
+	}
+}
+
+// Function to delete a file (logo) after use
+func deleteFile(filepath string) error {
+	err := os.Remove(filepath)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Deleted file:", filepath)
+	return nil
 }

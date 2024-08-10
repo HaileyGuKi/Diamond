@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 )
 
 // Helper function to convert score to emoji string
@@ -92,15 +91,7 @@ func CheckFinishedMatches(apiKey string) {
 			match.AwayTeam.Name,
 		)
 		fmt.Print(message)
-		fmt.Println(match.HomeTeam)
-		img.GenerateBannerFromURLs(match.HomeTeam.Logo, match.AwayTeam.Logo)
-		// telegram.SendToTelegram(message)
-
-		// if match.HomeTeam.Name == "FC Barcelona" && (match.Score.FullTime.Home > match.Score.FullTime.Away) || match.AwayTeam.Name == "FC Barcelona" && (match.Score.FullTime.Away > match.Score.FullTime.Home) {
-		// 	message := "🔵🔴 We are Winner 😃"
-		// 	telegram.SendToTelegram(message)
-		// }
-
+		telegram.SendToTelegram(message)
 	} else {
 		fmt.Println("No match played yesterday.")
 	}
@@ -124,24 +115,27 @@ func CheckScheduledMatches(apiKey string) {
 	utils.HandleErr("Error parsing match date", err)
 
 	// Truncate the current time and match time to midnight (start of the day)
-	now := time.Now().Truncate(24 * time.Hour)
-	matchDay := spainTime.Truncate(24 * time.Hour)
+	// now := time.Now().Truncate(24 * time.Hour)
+	// matchDay := spainTime.Truncate(24 * time.Hour)
 
 	// Calculate days remaining until the next match using time.Until
-	daysUntilMatch := int(matchDay.Sub(now).Hours() / 24)
+	// daysUntilMatch := int(matchDay.Sub(now).Hours() / 24)
 
 	// Check if the match is today
-	if daysUntilMatch == 0 {
-		// Format the Jalali date and Iran time together
-		iranFormatted := fmt.Sprintf("%s %s", jalaliDate, iranTime.Format("15:04"))
+	// if daysUntilMatch == 0 {
+	// Format the Jalali date and Iran time together
+	iranFormatted := fmt.Sprintf("%s %s", jalaliDate, iranTime.Format("15:04"))
 
-		message := fmt.Sprintf("🚩 [MatchDay]\n%s vs %s\n🇪🇸🕞 %s\n🇮🇷🕞 %s\n",
-			match.HomeTeam.Name,
-			match.AwayTeam.Name,
-			spainTime.Format("2006-01-02 15:04"), // Spain time
-			iranFormatted)                        // Jalali date + Iran time
+	message := fmt.Sprintf("🚩 MatchDay\n⚽️ %s vs %s\n\n🇪🇸 %s\n🇮🇷 %s\n",
+		match.HomeTeam.Name,
+		match.AwayTeam.Name,
+		spainTime.Format("2006-01-02 15:04"), // Spain time
+		iranFormatted)                        // Jalali date + Iran time
 
-		fmt.Print(message)
-		telegram.SendToTelegram(message)
-	}
+	fmt.Print(message)
+	bannerPath := "match_banner.png"
+	img.GenerateBannerFromURLs(match.HomeTeam.Logo, match.AwayTeam.Logo)
+	telegram.SendPhotoToTelegram(bannerPath, message)
+	// telegram.SendToTelegram(message)
+	// }
 }
