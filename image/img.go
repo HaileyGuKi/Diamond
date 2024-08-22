@@ -1,6 +1,7 @@
 package img
 
 import (
+	"barcelona-watch/utils"
 	"fmt"
 	"image"
 	"image/png"
@@ -118,24 +119,14 @@ func GenerateBannerFromURLs(homeLogoURL, awayLogoURL string) {
 	}
 
 	// Delete the home team logo after banner creation
-	err = deleteFile("home_logo.jpg")
+	err = utils.DeleteFile("home_logo.jpg")
 	if err != nil {
 		fmt.Println("Error deleting home logo:", err)
 	}
 
 	// Delete the away team logo after banner creation
-	err = deleteFile("away_logo.jpg")
+	err = utils.DeleteFile("away_logo.jpg")
 	if err != nil {
 		fmt.Println("Error deleting away logo:", err)
 	}
-}
-
-// Function to delete a file (logo) after use
-func deleteFile(filepath string) error {
-	err := os.Remove(filepath)
-	if err != nil {
-		return err
-	}
-	fmt.Println("Deleted file:", filepath)
-	return nil
 }

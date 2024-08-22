@@ -123,7 +123,6 @@ func CheckScheduledMatches(apiKey string) {
 
 	// Check if the match is today
 	// if daysUntilMatch == 0 {
-	// Format the Jalali date and Iran time together
 	iranFormatted := fmt.Sprintf("%s %s", jalaliDate, iranTime.Format("15:04"))
 
 	message := fmt.Sprintf("🚩 MatchDay\n⚽️ %s vs %s\n\n🇪🇸 %s\n🇮🇷 %s\n",
@@ -136,6 +135,6 @@ func CheckScheduledMatches(apiKey string) {
 	bannerPath := "match_banner.png"
 	img.GenerateBannerFromURLs(match.HomeTeam.Logo, match.AwayTeam.Logo)
 	telegram.SendPhotoToTelegram(bannerPath, message)
-	// telegram.SendToTelegram(message)
+	utils.DeleteFile(bannerPath)
 	// }
 }
