@@ -2,7 +2,6 @@ package img
 
 import (
 	"barcelona-watch/utils"
-	"fmt"
 	"image"
 	"image/png"
 	"net/http"
@@ -10,35 +9,26 @@ import (
 
 	"github.com/fogleman/gg"
 	"github.com/nfnt/resize"
-	_ "golang.org/x/image/webp" // In case images are in WebP format
 )
 
 func downloadImage(url, filepath string) error {
 	// Get the image from the URL
 	response, err := http.Get(url)
-	if err != nil {
-		return err
-	}
+	utils.HandleErr("Error:", err)
 	defer response.Body.Close()
 
 	// Create the file
 	file, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
+	utils.HandleErr("Error:", err)
 	defer file.Close()
 
 	// Decode the image
 	img, _, err := image.Decode(response.Body)
-	if err != nil {
-		return err
-	}
+	utils.HandleErr("Error:", err)
 
 	// Save the decoded image as PNG
 	err = png.Encode(file, img) // Change jpeg.Encode to png.Encode
-	if err != nil {
-		return err
-	}
+	utils.HandleErr("Error:", err)
 
 	return nil
 }
@@ -63,15 +53,11 @@ func createMatchBanner(homeLogoPath, awayLogoPath string) error {
 
 	// Load the home team logo
 	homeImg, err := gg.LoadImage(homeLogoPath)
-	if err != nil {
-		return err
-	}
+	utils.HandleErr("Error:", err)
 
 	// Load the away team logo
 	awayImg, err := gg.LoadImage(awayLogoPath)
-	if err != nil {
-		return err
-	}
+	utils.HandleErr("Error:", err)
 
 	// Resize logos for better fit
 	homeLogoScaledWidth := uint(300)
@@ -88,11 +74,8 @@ func createMatchBanner(homeLogoPath, awayLogoPath string) error {
 
 	// Save the output as PNG
 	err = dc.SavePNG("match_banner.png")
-	if err != nil {
-		return err
-	}
+	utils.HandleErr("Error:", err)
 
-	fmt.Println("Banner created successfully at match_banner.png")
 	return nil
 }
 
@@ -100,33 +83,21 @@ func createMatchBanner(homeLogoPath, awayLogoPath string) error {
 func GenerateBannerFromURLs(homeLogoURL, awayLogoURL string) {
 	// Download the home team logo
 	err := downloadImage(homeLogoURL, "home_logo.jpg")
-	if err != nil {
-		fmt.Println("Error downloading home logo:", err)
-		return
-	}
+	utils.HandleErr("Error downloading home logo:", err)
 
 	// Download the away team logo
 	err = downloadImage(awayLogoURL, "away_logo.jpg")
-	if err != nil {
-		fmt.Println("Error downloading away logo:", err)
-		return
-	}
+	utils.HandleErr("Error downloading away logo:", err)
 
 	// Create the banner image
 	err = createMatchBanner("home_logo.jpg", "away_logo.jpg")
-	if err != nil {
-		fmt.Println("Error creating banner:", err)
-	}
+	utils.HandleErr("Error creating banner:", err)
 
 	// Delete the home team logo after banner creation
 	err = utils.DeleteFile("home_logo.jpg")
-	if err != nil {
-		fmt.Println("Error deleting home logo:", err)
-	}
+	utils.HandleErr("Error deleting home logo:", err)
 
 	// Delete the away team logo after banner creation
 	err = utils.DeleteFile("away_logo.jpg")
-	if err != nil {
-		fmt.Println("Error deleting away logo:", err)
-	}
+	utils.HandleErr("Error deleting away logo:", err)
 }

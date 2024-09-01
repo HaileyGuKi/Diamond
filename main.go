@@ -2,9 +2,11 @@
 package main
 
 import (
+	"flag"
 	"os"
 
 	"barcelona-watch/api"
+	"barcelona-watch/global"
 	"barcelona-watch/utils"
 
 	"github.com/joho/godotenv"
@@ -15,7 +17,14 @@ func init() {
 	utils.HandleErr("Error loading .env file", err)
 }
 
+func flagParser() {
+	flag.StringVar(&global.ProxyURL, "proxy", "", "Proxy URL to use for sending Telegram messages")
+	flag.Parse()
+}
+
 func main() {
+	flagParser()
+
 	// Load the API key from .env
 	apiKey := os.Getenv("API_KEY")
 

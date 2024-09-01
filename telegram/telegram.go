@@ -12,18 +12,13 @@ import (
 	"os"
 	"time"
 
+	"barcelona-watch/global"
 	"barcelona-watch/utils"
 )
 
 type TelegramMessage struct {
 	ChatID string `json:"chat_id"`
 	Text   string `json:"text"`
-}
-
-type TelegramPhotoMessage struct {
-	ChatID  string `json:"chat_id"`
-	Photo   string `json:"photo"`             // URL or path to the photo
-	Caption string `json:"caption,omitempty"` // Optional caption for the image
 }
 
 const (
@@ -33,10 +28,8 @@ const (
 )
 
 func SendToTelegram(message string) {
-	botToken := getEnv("TELEGRAM_BOT_TOKEN")
-	channelID := getEnv("TELEGRAM_CHANNEL_ID")
-	proxyURL := "socks5://0.0.0.0:8086"
-
+	botToken := utils.GetEnv("TELEGRAM_BOT_TOKEN")
+	channelID := utils.GetEnv("TELEGRAM_CHANNEL_ID")
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", botToken)
 	telegramMessage := TelegramMessage{
 		ChatID: channelID,
@@ -44,12 +37,9 @@ func SendToTelegram(message string) {
 	}
 
 	jsonData, err := json.Marshal(telegramMessage)
-	if err != nil {
-		utils.HandleErr("Error marshalling Telegram message", err)
-		return
-	}
+	utils.HandleErr("Error marshalling Telegram message", err)
 
-	client := utils.CreateHTTPClient(proxyURL)
+	client := utils.CreateHTTPClient(global.ProxyURL)
 	retryCount := 0
 
 	for {
@@ -57,7 +47,6 @@ func SendToTelegram(message string) {
 		if err != nil {
 			if retryCount >= maxRetries {
 				utils.HandleErr("Failed to send message to Telegram after retries", err)
-				return
 			}
 			time.Sleep(retryDelay) // Wait before retrying
 			continue
@@ -67,18 +56,13 @@ func SendToTelegram(message string) {
 }
 
 func SendPhotoToTelegram(photoPath, caption string) {
-	botToken := getEnv("TELEGRAM_BOT_TOKEN")
-	channelID := getEnv("TELEGRAM_CHANNEL_ID")
-	proxyURL := "socks5://0.0.0.0:8086"
-
+	botToken := utils.GetEnv("TELEGRAM_BOT_TOKEN")
+	channelID := utils.GetEnv("TELEGRAM_CHANNEL_ID")
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto", botToken)
 
 	// Open the image file to send it
 	file, err := os.Open(photoPath)
-	if err != nil {
-		utils.HandleErr("Error opening photo file", err)
-		return
-	}
+	utils.HandleErr("Error opening photo file", err)
 	defer file.Close()
 
 	// Create a buffer to hold the multipart form data
@@ -87,17 +71,11 @@ func SendPhotoToTelegram(photoPath, caption string) {
 
 	// Create the form file field for the photo
 	part, err := writer.CreateFormFile("photo", photoPath)
-	if err != nil {
-		utils.HandleErr("Error creating form file for photo", err)
-		return
-	}
+	utils.HandleErr("Error creating form file for photo", err)
 
 	// Copy the photo file into the form file field
 	_, err = io.Copy(part, file)
-	if err != nil {
-		utils.HandleErr("Error copying photo file", err)
-		return
-	}
+	utils.HandleErr("Error copying photo file", err)
 
 	// Add the chat_id and caption fields
 	_ = writer.WriteField("chat_id", channelID)
@@ -105,34 +83,23 @@ func SendPhotoToTelegram(photoPath, caption string) {
 
 	// Close the writer to finalize the form data
 	err = writer.Close()
-	if err != nil {
-		utils.HandleErr("Error closing form writer", err)
-		return
-	}
+	utils.HandleErr("Error closing form writer", err)
 
 	// Create the HTTP client with a proxy if needed
-	client := utils.CreateHTTPClient(proxyURL)
+	client := utils.CreateHTTPClient(global.ProxyURL)
 	req, err := http.NewRequest("POST", apiURL, form)
-	if err != nil {
-		utils.HandleErr("Error creating new request", err)
-		return
-	}
+	utils.HandleErr("Error creating new request", err)
+
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	// Perform the request
 	resp, err := client.Do(req)
-	if err != nil {
-		utils.HandleErr("Error sending request to Telegram", err)
-		return
-	}
+	utils.HandleErr("Error sending request to Telegram", err)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		utils.HandleErr(fmt.Sprintf("Failed to send photo, status code: %d", resp.StatusCode), err)
-		return
 	}
-
-	fmt.Println("Photo sent successfully")
 }
 
 func sendRequest(client *http.Client, apiURL string, jsonData []byte, retryCount *int) error {
@@ -160,14 +127,6 @@ func sendRequest(client *http.Client, apiURL string, jsonData []byte, retryCount
 	}
 
 	return fmt.Errorf("failed to send message, status code: %d", resp.StatusCode)
-}
-
-func getEnv(key string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		fmt.Printf("environment variable %s not set", key)
-	}
-	return value
 }
 
 func ValidateProxyURL(proxyURL string) error {
