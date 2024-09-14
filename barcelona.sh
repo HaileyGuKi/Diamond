@@ -1,15 +1,24 @@
 #!/bin/bash
 
+source /home/mohammad/Videos/go/proxy.env
+
 # Define variables
 LOGFILE="$HOME/Videos/go/Barcelona-watch/barcelona_watch_log.log"
 SCRIPT_PATH="$HOME/Videos/go/Barcelona-watch" # Change this to your actual script directory
-PROXY="socks5://0.0.0.0:8086" # Proxy details
-PROXY_HOST="0.0.0.0"
-PROXY_PORT="8086"
 
 # Function to check proxy connection
 check_proxy() {
     nc -zv "$PROXY_HOST" "$PROXY_PORT" >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to check if Windscribe VPN is up
+check_windscribe() {
+    windscribe-cli status | grep -q "Connected"
     if [ $? -eq 0 ]; then
         return 0
     else
@@ -55,14 +64,22 @@ else
     echo "Proceeding with the script, as it has not run today."
 fi
 
-
-# Now, check the proxy connection
-if check_proxy; then
-    echo "Proxy is up, running the barcelona-watch script..."
-
-    # Run the barcelona-watch script with the proxy
+# Check Windscribe VPN first, then fallback to proxy logic
+if check_windscribe; then
+    echo "Windscribe VPN is up, running the barcelona-watch script without proxy..."
     cd "$SCRIPT_PATH" || { echo "Failed to change directory to $SCRIPT_PATH"; exit 1; }
-    
+    /home/mohammad/go/bin/barcelona
+    GO_RUN_STATUS=$?
+
+    if [ $GO_RUN_STATUS -eq 0 ]; then
+        log_run_date
+    else
+        echo "Barcelona-watch script failed with status: $GO_RUN_STATUS"
+    fi
+
+elif check_proxy; then
+    echo "Proxy is up, running the barcelona-watch script with proxy..."
+    cd "$SCRIPT_PATH" || { echo "Failed to change directory to $SCRIPT_PATH"; exit 1; }
     /home/mohammad/go/bin/barcelona --proxy="$PROXY"
     GO_RUN_STATUS=$?
 
@@ -71,6 +88,8 @@ if check_proxy; then
     else
         echo "Barcelona-watch script failed with status: $GO_RUN_STATUS"
     fi
+
 else
-    echo "Proxy is down, skipping this attempt."
+    echo "Neither Windscribe VPN nor proxy is available. Skipping this attempt."
 fi
+
