@@ -18,11 +18,12 @@ check_proxy() {
 
 # Function to check if Windscribe VPN is up
 check_windscribe() {
-    windscribe-cli status | grep -q "Connected"
+    # Look for Windscribe process or service
+    ps aux | grep "[w]indscribe" >/dev/null 2>&1
     if [ $? -eq 0 ]; then
-        return 0
+        return 0  # Windscribe is running
     else
-        return 1
+        return 1  # Windscribe is not running
     fi
 }
 
