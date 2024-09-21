@@ -1,0 +1,70 @@
+name: Run Barcelona-Watch
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Run daily at midnight (adjust as needed)
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  run-barcelona-watch:
+    runs-on: ubuntu-latest
+
+    env:
+      LOG_FILE: barcelona_watch_log.log
+      SCRIPT_PATH: ${{ github.workspace }}
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 2: Set up Go
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          go mod tidy
+
+      # Step 4: Check if script ran today
+      - name: Check if script ran today
+        id: check_run
+        run: |
+          TODAY=$(date '+%Y-%m-%d')
+          if grep -q "$TODAY" "$LOG_FILE"; then
+            echo "already_ran=true" >> $GITHUB_ENV
+          else
+            echo "already_ran=false" >> $GITHUB_ENV
+          fi
+
+      # Step 5: Skip if already ran today
+      - name: Skip if already ran today
+        if: env.already_ran == 'true'
+        run: echo "Script already ran today, skipping execution."
+
+      # Step 6: Run the barcelona-watch script
+      - name: Run barcelona-watch
+        if: env.already_ran == 'false'
+        run: |
+          go run main.go
+          if [ $? -eq 0 ]; then
+            echo "Barcelona-watch completed successfully on $(date '+%Y-%m-%d')" >> "$LOG_FILE"
+          else
+            echo "Barcelona-watch failed on $(date '+%Y-%m-%d')" >> "$LOG_FILE"
+
+      # Step 7: Commit and push log file
+      - name: Commit and push log file
+        if: env.already_ran == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$LOG_FILE"
+          git commit -m "Update log file for $(date '+%Y-%m-%d')"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
