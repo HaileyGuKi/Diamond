@@ -31,7 +31,16 @@ jobs:
         run: |
           go mod tidy
 
-      # Step 4: Check if script ran today
+      # Step 4: Create .env file from secrets
+      - name: Create .env file
+        run: |
+          echo "API_KEY=${{ secrets.API_KEY }}" >> .env
+          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
+          echo "TELEGRAM_CHANNEL_ID=${{ secrets.TELEGRAM_CHANNEL_ID }}" >> .env
+          echo "CHAT_ID=${{ secrets.CHAT_ID }}" >> .env
+          echo "MESSAGE_THREAD_ID=${{ secrets.MESSAGE_THREAD_ID }}" >> .env
+
+      # Step 5: Check if script ran today
       - name: Check if script ran today
         id: check_run
         run: |
@@ -42,12 +51,12 @@ jobs:
             echo "already_ran=false" >> $GITHUB_ENV
           fi
 
-      # Step 5: Skip if already ran today
+      # Step 6: Skip if already ran today
       - name: Skip if already ran today
         if: env.already_ran == 'true'
         run: echo "Script already ran today, skipping execution."
 
-      # Step 6: Run the barcelona-watch script
+      # Step 7: Run the barcelona-watch script
       - name: Run barcelona-watch
         if: env.already_ran == 'false'
         run: |
@@ -57,7 +66,7 @@ jobs:
           else
             echo "Barcelona-watch failed on $(date '+%Y-%m-%d')" >> "$LOG_FILE"
 
-      # Step 7: Commit and push log file
+      # Step 8: Commit and push log file
       - name: Commit and push log file
         if: env.already_ran == 'false'
         run: |
