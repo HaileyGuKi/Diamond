@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"os"
+	"path/filepath"
 
 	"barcelona-watch/api"
 	"barcelona-watch/global"
@@ -12,8 +13,15 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// func init() {
+// 	err := godotenv.Load("/home/mohammad/Videos/go/Barcelona-watch/.env")
+// 	utils.HandleErr("Error loading .env file", err)
+// }
+
 func init() {
-	err := godotenv.Load("/home/mohammad/Videos/go/Barcelona-watch/.env")
+	// Get the correct path to the .env file in GitHub Actions
+	envFile := filepath.Join(os.Getenv("GITHUB_WORKSPACE"), ".env")
+	err := godotenv.Load(envFile)
 	utils.HandleErr("Error loading .env file", err)
 }
 
