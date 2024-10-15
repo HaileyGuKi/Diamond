@@ -56,15 +56,18 @@ jobs:
         if: env.already_ran == 'true'
         run: echo "Script already ran today, skipping execution."
 
-      # Step 7: Run the barcelona-watch script
+      # Step 7: Run the barcelona-watch script and log output
       - name: Run barcelona-watch
         if: env.already_ran == 'false'
         run: |
-          go run main.go
+          # Run the Go script and capture both output and error in a log file
+          go run main.go > output.log 2>&1
           if [ $? -eq 0 ]; then
             echo "Barcelona-watch completed successfully on $(date '+%Y-%m-%d')" >> "$LOG_FILE"
           else
-            echo "Barcelona-watch failed on $(date '+%Y-%m-%d')" >> "$LOG_FILE"
+            echo "Barcelona-watch failed on $(date '+%Y-%m-%d'). Check output.log for details." >> "$LOG_FILE"
+            cat output.log  # Print the output log to the action logs for better debugging
+          fi
 
       # Step 8: Commit and push log file
       - name: Commit and push log file
