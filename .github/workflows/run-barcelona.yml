@@ -2,7 +2,7 @@ name: Run Barcelona-Watch
 
 on:
   schedule:
-    - cron: "0 0 * * *" # Run daily at midnight (adjust as needed)
+    - cron: "30 6 * * *" # Run daily at midnight (adjust as needed)
   workflow_dispatch: # Allow manual triggering
 
 jobs:
