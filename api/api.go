@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -61,7 +62,6 @@ func parseResponse(body []byte) (models.ApiResponse, error) {
 	return apiResponse, nil
 }
 
-// CheckFinishedMatches handles the logic for checking the last finished match.
 func CheckFinishedMatches(apiKey string) {
 	body, err := makeRequest(apiKey, "FINISHED")
 	utils.HandleErr("Error", err)
@@ -76,8 +76,17 @@ func CheckFinishedMatches(apiKey string) {
 
 	// Handle the result
 	match := apiResponse.Matches[0]
+
 	spainTime, _, _, err := utils.ParseTime(match.UtcDate)
 	utils.HandleErr("Error parsing match date", err)
+
+	if match.Competition.Type == "LEAGUE" {
+		logMessage := fmt.Sprintf("LEAGUE - %s - %s\n",
+			spainTime.Format("2006-01-02"),
+			spainTime.Format("15:04:05"),
+		)
+		appendToFile("liga-table.log", logMessage)
+	}
 
 	// Check if the match was yesterday
 	if utils.IsYesterday(spainTime) {
@@ -92,8 +101,25 @@ func CheckFinishedMatches(apiKey string) {
 		)
 		fmt.Print(message)
 		telegram.SendToTelegram(message)
+
+		// Log if the type is LEAGUE
+		/////////////////////////////
 	} else {
 		fmt.Println("No match played yesterday.")
+	}
+}
+
+// Helper function to append log messages to a file
+func appendToFile(filePath, content string) {
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		utils.HandleErr("Error opening log file", err)
+		return
+	}
+	defer file.Close()
+
+	if _, err := file.WriteString(content); err != nil {
+		utils.HandleErr("Error writing to log file", err)
 	}
 }
 

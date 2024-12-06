@@ -20,6 +20,9 @@ type Match struct {
 	Season struct {
 		CurrentMatchday int `json:"currentMatchday"`
 	} `json:"season"`
+	Competition struct {
+		Type string `json:"type"`
+	} `json:"competition"`
 }
 
 type ApiResponse struct {
