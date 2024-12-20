@@ -1,0 +1,58 @@
+name: Run Liga-Table Handler
+
+on:
+  schedule:
+    - cron: "0 8 * * 1" # Run every Monday at 8:00 AM
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  run-liga-table:
+    runs-on: ubuntu-latest
+
+    env:
+      LOG_FILE: liga-table.log
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18 # Specify the Node.js version
+          cache: "npm"
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          cd table-handler
+          npm install
+
+      # Step 4: Create .env file in the table-handler directory
+      - name: Create .env file
+        run: |
+          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" > table-handler/.env
+          echo "TELEGRAM_CHANNEL_ID=${{ secrets.TELEGRAM_CHANNEL_ID }}" >> table-handler/.env
+
+      # Step 5: Run Node.js script
+      - name: Run Liga-Table Handler
+        run: |
+          cd table-handler
+          node liga-table.js
+
+      # Step 6: Check and commit log file if cleared
+      - name: Commit cleared log file
+        if: success()
+        run: |
+          if [ ! -s "$GITHUB_WORKSPACE/$LOG_FILE" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add "$GITHUB_WORKSPACE/$LOG_FILE"
+            git commit -m "Cleared liga-table.log on $(date '+%Y-%m-%d')"
+            git push
+          else
+            echo "Log file not cleared. No commit needed."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
