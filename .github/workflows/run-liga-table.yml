@@ -17,33 +17,41 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js
+      # Step 2: Debug current directory
+      - name: Debug workspace structure
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Files in workspace:"
+          ls -al
+          echo "Checking table-handler directory:"
+          ls -al table-handler || echo "Directory not found!"
+
+      # Step 3: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18 # Specify the Node.js version
           cache: "npm"
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
+      # Step 4: Install dependencies
       - name: Install Node.js dependencies
         run: |
           cd table-handler
           npm ci # Install using the lock file
 
-      # Step 4: Create .env file in the table-handler directory
+      # Step 5: Create .env file in the table-handler directory
       - name: Create .env file
         run: |
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" > table-handler/.env
           echo "TELEGRAM_CHANNEL_ID=${{ secrets.TELEGRAM_CHANNEL_ID }}" >> table-handler/.env
 
-      # Step 5: Run Node.js script
+      # Step 6: Run Node.js script
       - name: Run Liga-Table Handler
         run: |
           cd table-handler
           node liga-table.js
 
-      # Step 6: Check and commit log file if cleared
+      # Step 7: Check and commit log file if cleared
       - name: Commit cleared log file
         if: success()
         run: |
