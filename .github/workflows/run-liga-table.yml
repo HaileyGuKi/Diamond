@@ -36,8 +36,8 @@ jobs:
       # Step 4: Install dependencies
       - name: Install Node.js dependencies
         run: |
-          cd table-handler
-          npm ci # Install using the lock file
+          npm ci # Run npm ci from the root, table-handler should be accessible from here
+        working-directory: ./table-handler # Explicitly set the working directory
 
       # Step 5: Create .env file in the table-handler directory
       - name: Create .env file
