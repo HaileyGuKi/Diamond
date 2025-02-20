@@ -1,5 +1,4 @@
 name: Run Liga-Table Handler
-
 on:
   schedule:
     - cron: "0 8 * * 1" # Run every Monday at 8:00 AM
@@ -8,10 +7,8 @@ on:
 jobs:
   run-liga-table:
     runs-on: ubuntu-latest
-
     env:
       LOG_FILE: liga-table.log
-
     steps:
       # Step 1: Checkout repository
       - name: Checkout repository
@@ -30,17 +27,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18 # Specify the Node.js version
+          node-version: 18
           cache: "npm"
-        env:
-          npm_config_cache: /home/runner/.npm # Explicitly define npm cache directory
+          cache-dependency-path: "table-handler/package-lock.json" # Add this line
 
       # Step 4: Install dependencies
       - name: Install Node.js dependencies
-        run: |
-          cd table-handler
-          npm ci # Run npm ci from the table-handler directory
-        working-directory: ./table-handler # Explicitly set the working directory
+        working-directory: ./table-handler
+        run: npm ci
 
       # Step 5: Create .env file in the table-handler directory
       - name: Create .env file
@@ -66,5 +60,6 @@ jobs:
             git push
           else
             echo "Log file not cleared. No commit needed."
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
