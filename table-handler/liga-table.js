@@ -17,7 +17,9 @@ require('dotenv').config();
         }
 
         // Step 2: Launch Puppeteer to scrape the table
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({
+            args: ['--no-sandbox', '--disable-setuid-sandbox'], // Add these flags
+        });
         const page = await browser.newPage();
 
         // Set a high-resolution viewport
