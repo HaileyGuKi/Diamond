@@ -80,14 +80,6 @@ func CheckFinishedMatches(apiKey string) {
 	spainTime, _, _, err := utils.ParseTime(match.UtcDate)
 	utils.HandleErr("Error parsing match date", err)
 
-	if match.Competition.Type == "LEAGUE" {
-		logMessage := fmt.Sprintf("LEAGUE - %s - %s\n",
-			spainTime.Format("2006-01-02"),
-			spainTime.Format("15:04:05"),
-		)
-		appendToFile("liga-table.log", logMessage)
-	}
-
 	// Check if the match was yesterday
 	if utils.IsYesterday(spainTime) {
 		homeScoreEmoji := convertScoreToEmoji(match.Score.FullTime.Home)
@@ -103,7 +95,13 @@ func CheckFinishedMatches(apiKey string) {
 		telegram.SendToTelegram(message)
 
 		// Log if the type is LEAGUE
-		/////////////////////////////
+		if match.Competition.Type == "LEAGUE" {
+			logMessage := fmt.Sprintf("LEAGUE - %s - %s\n",
+				spainTime.Format("2006-01-02"),
+				spainTime.Format("15:04:05"),
+			)
+			appendToFile("liga-table.log", logMessage)
+		}
 	} else {
 		fmt.Println("No match played yesterday.")
 	}
