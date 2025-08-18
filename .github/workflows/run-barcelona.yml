@@ -58,18 +58,30 @@ jobs:
 
       # Step 7: Run the barcelona-watch script and log output
       - name: Run barcelona-watch
+        id: run-barcelona-watch
         if: env.already_ran == 'false'
         run: |
           # Run the Go script and capture both output and error in a log file
           go run main.go > output.log 2>&1
-          if [ $? -eq 0 ]; then
+          exit_status=$?
+          if [ $exit_status -eq 0 ]; then
             echo "Barcelona-watch completed successfully on $(date '+%Y-%m-%d')" >> "$LOG_FILE"
           else
             echo "Barcelona-watch failed on $(date '+%Y-%m-%d'). Check output.log for details." >> "$LOG_FILE"
+            echo "::set-output name=error_message::Barcelona-Watch failed with exit code $exit_status"
             cat output.log  # Print the output log to the action logs for better debugging
+            exit 1
           fi
 
-      # Step 8: Commit and push log file
+      # Step 8: Notify Error Alarm Channel on failure
+      - name: Notify Error Alarm Channel
+        if: failure()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          -d chat_id=${{ secrets.ERROR_ALARM_CHANNEL_ID }} \
+          -d text="Error in Barcelona-Watch: ${{ steps.run-barcelona-watch.outputs.error_message }}"
+
+      # Step 9: Commit and push log file
       - name: Commit and push log file
         if: env.already_ran == 'false'
         run: |

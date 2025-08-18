@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: 18
           cache: "npm"
-          cache-dependency-path: "table-handler/package-lock.json" # Add this line
+          cache-dependency-path: "table-handler/package-lock.json"
 
       # Step 4: Install dependencies
       - name: Install Node.js dependencies
@@ -42,13 +42,28 @@ jobs:
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" > table-handler/.env
           echo "TELEGRAM_CHANNEL_ID=${{ secrets.TELEGRAM_CHANNEL_ID }}" >> table-handler/.env
 
-      # Step 6: Run Node.js script
+      # Step 6: Run Node.js script with error handling
       - name: Run Liga-Table Handler
+        id: run-liga-table-handler
         run: |
           cd table-handler
+          set +e
           node liga-table.js
+          exit_status=$?
+          if [ $exit_status -ne 0 ]; then
+            echo "::set-output name=error_message::Liga-Table Handler failed with exit code $exit_status"
+            exit 1
+          fi
 
-      # Step 7: Check and commit log file if changed
+      # Step 7: Notify Error Alarm Channel on failure
+      - name: Notify Error Alarm Channel
+        if: steps.run-liga-table-handler.outputs.error_message
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          -d chat_id=${{ secrets.ERROR_ALARM_CHANNEL_ID }} \
+          -d text="Error in Liga-Table Handler: ${{ steps.run-liga-table-handler.outputs.error_message }}"
+
+      # Step 8: Check and commit log file if changed
       - name: Commit updated log file
         if: success()
         run: |
