@@ -1,7 +1,7 @@
 name: Run Liga-Table Handler
 on:
   schedule:
-    - cron: "0 5 * * *" # Run every Monday at 8:00 AM
+    - cron: "0 5 * * 1" # Run every Monday at 8:00 AM
   workflow_dispatch: # Allow manual triggering
 
 jobs:
